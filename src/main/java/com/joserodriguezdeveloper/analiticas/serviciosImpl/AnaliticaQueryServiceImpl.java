@@ -1,13 +1,11 @@
 package com.joserodriguezdeveloper.analiticas.serviciosImpl;
 
-
 import com.joserodriguezdeveloper.analiticas.modelo.Dto.AnaliticaDashboardDTO;
 import com.joserodriguezdeveloper.analiticas.modelo.Dto.ArticuloEngagementDTO;
 import com.joserodriguezdeveloper.analiticas.modelo.Dto.VisitanteFiltroDTO;
 import com.joserodriguezdeveloper.analiticas.modelo.Dto.VisitanteRecienteDTO;
 import com.joserodriguezdeveloper.analiticas.modelo.EventoAnalitica;
 import com.joserodriguezdeveloper.analiticas.repositorio.AnaliticaRepository;
-import com.joserodriguezdeveloper.analiticas.repositorio.AnaliticaSpecifications;
 import com.joserodriguezdeveloper.analiticas.servicios.AnaliticaQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,19 +15,19 @@ import java.util.stream.Collectors;
 
 
 @Service
-public class  AnaliticaQueryServiceImpl implements AnaliticaQueryService {
+public class AnaliticaQueryServiceImpl implements AnaliticaQueryService {
 
     @Autowired
     private AnaliticaRepository analiticaRepository;
 
-
-
     public List<String> obtenerCiudadesUnicas() {
         return analiticaRepository.findDistinctCiudades();
     }
+
     public List<String> obtenerDispositivosUnicos() {
         return analiticaRepository.findDistinctDispositivos();
     }
+
     public List<String> obtenerNavegadoresUnicos() {
         return analiticaRepository.findDistinctNavegador();
     }
@@ -37,9 +35,11 @@ public class  AnaliticaQueryServiceImpl implements AnaliticaQueryService {
     public List<String> obtenerPaisUnicos() {
         return analiticaRepository.findDistinctPais();
     }
+
     public List<String> obtenerRegionUnicos() {
         return analiticaRepository.findDistinctRegion();
     }
+
     public List<String> obtenerSistemaOperativoUnicos() {
         return analiticaRepository.findDistinctSistemaOperativo();
     }
@@ -57,9 +57,9 @@ public class  AnaliticaQueryServiceImpl implements AnaliticaQueryService {
                 .collect(Collectors.toList());
     }
 
-   public AnaliticaDashboardDTO listarAnaliticas (){
+    public AnaliticaDashboardDTO listarAnaliticas (){
 
-        AnaliticaDashboardDTO analiticaDashboardDTO =new AnaliticaDashboardDTO();
+        AnaliticaDashboardDTO analiticaDashboardDTO = new AnaliticaDashboardDTO();
 
         analiticaDashboardDTO.setCiudades(analiticaRepository.findDistinctCiudades());
         analiticaDashboardDTO.setDispositivos(analiticaRepository.findDistinctDispositivos());
@@ -70,24 +70,22 @@ public class  AnaliticaQueryServiceImpl implements AnaliticaQueryService {
 
         return analiticaDashboardDTO;
 
-   }
-/*
-    public List<ArticuloEngagementDTO> obtenerVisitantesFiltrados(VisitanteFiltroDTO filtro) {
-        System.out.println("visitantes filtrados servicios");
-        return analiticaRepository.obtenerEngagementReciente();
     }
 
-*/
+    // --- EL NUEVO MOTOR DE FILTRADO DIRECTO A DTO ---
+    @Override
     public List<ArticuloEngagementDTO> obtenerVisitantesFiltrados(VisitanteFiltroDTO filtro) {
-        List<EventoAnalitica> entidades = analiticaRepository.findAll(AnaliticaSpecifications.conFiltros(filtro));
+        System.out.println("--- DEBUG: Ejecutando filtro JPQL dinámico en el servicio ---");
 
-        // Mapeo manual de Entidad a DTO
-        return entidades.stream().map(e -> new ArticuloEngagementDTO(
-                e.getUrl(),
-                e.getAliasVisitante(),
-                e.getPorcentajeLectura(),
-                e.getCiudad(),
-                e.getDispositivo()
-        )).collect(Collectors.toList());
+        // Llamamos directamente al método del repositorio que evalúa los nulos
+        // y construye el ArticuloEngagementDTO desde la base de datos.
+        return analiticaRepository.buscarEngagementFiltrado(
+                filtro.getCiudad(),
+                filtro.getDispositivo(),
+                filtro.getNavegador(),
+                filtro.getPais(),
+                filtro.getRegion(),
+                filtro.getSistemaOperativo()
+        );
     }
 }

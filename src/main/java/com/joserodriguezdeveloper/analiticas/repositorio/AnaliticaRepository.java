@@ -7,6 +7,7 @@ import com.joserodriguezdeveloper.analiticas.modelo.TipoEvento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -28,11 +29,25 @@ public interface AnaliticaRepository extends JpaRepository<EventoAnalitica, Long
     List<String> findDistinctRegion();
     @Query("SELECT DISTINCT e.sistemaOperativo FROM EventoAnalitica e WHERE e.sistemaOperativo IS NOT NULL")
     List<String> findDistinctSistemaOperativo();
-/*
-    @Query("SELECT new com.example.demo.modelo.Dto.ArticuloEngagementDTO(e.url, e.aliasVisitante, e.porcentajeLectura, e.ciudad, e.dispositivo) " +
-            "FROM EventoAnalitica e WHERE e.tipoEvento = 'VISTA_PAGINA' ORDER BY e.fechaRegistro DESC")
-              List<ArticuloEngagementDTO> obtenerEngagementReciente();
-        */
+
+
+    @Query("SELECT new com.joserodriguezdeveloper.analiticas.modelo.Dto.ArticuloEngagementDTO(e.url, e.aliasVisitante, e.porcentajeLectura, e.ciudad, e.dispositivo) " +
+            "FROM EventoAnalitica e WHERE " +
+            "(:ciudad IS NULL OR :ciudad = '' OR e.ciudad = :ciudad) " +
+            "AND (:dispositivo IS NULL OR :dispositivo = '' OR e.dispositivo = :dispositivo) " +
+            "AND (:navegador IS NULL OR :navegador = '' OR e.navegador = :navegador) " +
+            "AND (:pais IS NULL OR :pais = '' OR e.pais = :pais) " +
+            "AND (:region IS NULL OR :region = '' OR e.region = :region) " +
+            "AND (:sistemaOperativo IS NULL OR :sistemaOperativo = '' OR e.sistemaOperativo = :sistemaOperativo) " +
+            "ORDER BY e.fechaRegistro DESC")
+    List<ArticuloEngagementDTO> buscarEngagementFiltrado(
+            @Param("ciudad") String ciudad,
+            @Param("dispositivo") String dispositivo,
+            @Param("navegador") String navegador,
+            @Param("pais") String pais,
+            @Param("region") String region,
+            @Param("sistemaOperativo") String sistemaOperativo
+    );
 
 
     List<EventoAnalitica> findTop10ByOrderByFechaRegistroDesc();
